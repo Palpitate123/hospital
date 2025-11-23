@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.mapper.DoctorMapper">
+    
+    <resultMap id="DoctorResultMap" type="com.hospital.entity.Doctor">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="deptId" column="dept_id"/>
+        <result property="title" column="title"/>
+        <result property="specialty" column="specialty"/>
+        <result property="introduction" column="introduction"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    
+    <resultMap id="DoctorVOResultMap" type="com.hospital.vo.DoctorVO">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="deptId" column="dept_id"/>
+        <result property="title" column="title"/>
+        <result property="specialty" column="specialty"/>
+        <result property="introduction" column="introduction"/>
+        <result property="experience" column="experience"/>
+        <result property="consultationFee" column="consultation_fee"/>
+        <result property="dailyQuota" column="daily_quota"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="realName" column="real_name"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="deptName" column="dept_name"/>
+    </resultMap>
+    
+    <!-- 根据科室ID查询医生列表 -->
+    <select id="selectByDeptId" resultMap="DoctorResultMap">
+        SELECT * FROM doctor WHERE dept_id = #{deptId} AND status = 1 ORDER BY id DESC
+    </select>
+    
+    <!-- 根据用户ID查询医生信息 -->
+    <select id="selectByUserId" resultMap="DoctorResultMap">
+        SELECT * FROM doctor WHERE user_id = #{userId}
+    </select>
+    
+    <!-- 查询当日预约数量 -->
+    <select id="countTodayAppointments" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM appointment 
+        WHERE doctor_id = #{doctorId}
+        AND appointment_date = #{date}
+        AND status != 4
+    </select>
+    
+    <!-- 根据科室ID查询医生VO列表 -->
+    <select id="selectDoctorVOsByDeptId" resultMap="DoctorVOResultMap">
+        SELECT 
+            d.*, 
+            u.real_name, 
+            u.phone, 
+            u.email, 
+            dept.dept_name
+        FROM 
+            doctor d
+        LEFT JOIN 
+            user u ON d.user_id = u.id
+        LEFT JOIN 
+            department dept ON d.dept_id = dept.id
+        WHERE 
+            d.dept_id = #{deptId}
+            AND d.status = 1
+        ORDER BY 
+            d.id DESC
+    </select>
+</mapper>

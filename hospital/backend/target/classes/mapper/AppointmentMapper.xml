@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.mapper.AppointmentMapper">
+    
+    <resultMap id="AppointmentResultMap" type="com.hospital.entity.Appointment">
+        <id property="id" column="id"/>
+        <result property="patientId" column="patient_id"/>
+        <result property="doctorId" column="doctor_id"/>
+        <result property="appointmentDate" column="appointment_date"/>
+        <result property="appointmentTime" column="appointment_time"/>
+        <result property="reason" column="reason"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    
+    <!-- 根据患者ID查询预约列表 -->
+    <select id="selectByPatientId" resultMap="AppointmentResultMap">
+        SELECT * FROM appointment WHERE patient_id = #{patientId} ORDER BY appointment_date DESC
+    </select>
+    
+    <!-- 根据医生ID查询预约列表 -->
+    <select id="selectByDoctorId" resultMap="AppointmentResultMap">
+        SELECT * FROM appointment WHERE doctor_id = #{doctorId} ORDER BY appointment_date DESC
+    </select>
+    
+    <!-- 查询医生某天某个时间段的预约情况 -->
+    <select id="countByDoctorAndTime" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM appointment 
+        WHERE doctor_id = #{doctorId} 
+        AND appointment_date = #{date}
+        AND appointment_time = #{time}
+        AND status != 4
+    </select>
+    
+    <!-- 查询医生今日预约数量 -->
+    <select id="selectTodayAppointmentCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM appointment 
+        WHERE doctor_id = #{doctorId} 
+        AND appointment_date = CURDATE()
+        AND status != 4
+    </select>
+    
+    <!-- 查询医生某天某个时间段的预约列表 -->
+    <select id="selectByDoctorDateSlot" resultMap="AppointmentResultMap">
+        SELECT * FROM appointment 
+        WHERE doctor_id = #{doctorId} 
+        AND DATE(appointment_date) = DATE(#{date})
+        AND appointment_time LIKE CONCAT(#{timeSlot}, '%')
+        AND status != 4
+    </select>
+    
+    <!-- 根据状态统计预约数量 -->
+    <select id="selectCountByStatus" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM appointment WHERE status = #{status}
+    </select>
+</mapper>
