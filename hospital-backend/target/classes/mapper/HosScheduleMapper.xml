@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.mapper.HosScheduleMapper">
+
+    <!-- 查询排班列表（包含医生、科室、号源信息） -->
+    <select id="selectScheduleWithInfo" resultType="java.util.Map">
+        SELECT s.id, s.doctor_id, s.dept_id, s.work_date, s.work_time, s.total_number, s.schedule_status,
+               s.create_time, s.update_time,
+               d.doctor_name, d.title, d.avatar,
+               dept.dept_name,
+               ns.remain_number, ns.source_status
+        FROM hos_schedule s
+        LEFT JOIN hos_doctor d ON s.doctor_id = d.id
+        LEFT JOIN hos_department dept ON s.dept_id = dept.id
+        LEFT JOIN hos_number_source ns ON s.id = ns.schedule_id
+        WHERE s.deleted = 0
+        <if test="params.deptId != null">
+            AND s.dept_id = #{params.deptId}
+        </if>
+        <if test="params.doctorId != null">
+            AND s.doctor_id = #{params.doctorId}
+        </if>
+        <if test="params.doctorName != null and params.doctorName != ''">
+            AND d.doctor_name LIKE CONCAT('%', #{params.doctorName}, '%')
+        </if>
+        <if test="params.startDate != null">
+            AND s.work_date &gt;= #{params.startDate}
+        </if>
+        <if test="params.endDate != null">
+            AND s.work_date &lt;= #{params.endDate}
+        </if>
+        <if test="params.scheduleStatus != null">
+            AND s.schedule_status = #{params.scheduleStatus}
+        </if>
+        ORDER BY s.work_date ASC, s.work_time ASC
+    </select>
+
+    <!-- 根据ID查询排班详情（包含医生、科室、号源信息） -->
+    <select id="selectScheduleDetailById" resultType="java.util.Map">
+        SELECT s.id, s.doctor_id, s.dept_id, s.work_date, s.work_time, s.total_number, s.schedule_status,
+               s.create_time, s.update_time,
+               d.doctor_name, d.title, d.specialty, d.avatar,
+               dept.dept_name, dept.dept_desc,
+               ns.id as source_id, ns.remain_number, ns.source_status, ns.version
+        FROM hos_schedule s
+        LEFT JOIN hos_doctor d ON s.doctor_id = d.id
+        LEFT JOIN hos_department dept ON s.dept_id = dept.id
+        LEFT JOIN hos_number_source ns ON s.id = ns.schedule_id
+        WHERE s.id = #{id} AND s.deleted = 0
+    </select>
+
+    <!-- 检查排班是否冲突 -->
+    <select id="checkScheduleConflict" resultType="int">
+        SELECT COUNT(*) FROM hos_schedule
+        WHERE doctor_id = #{schedule.doctorId}
+          AND work_date = #{schedule.workDate}
+          AND work_time = #{schedule.workTime}
+          AND deleted = 0
+        <if test="schedule.id != null">
+            AND id != #{schedule.id}
+        </if>
+    </select>
+
+</mapper>

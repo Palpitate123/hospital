@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.mapper.HosAppointmentOrderMapper">
+
+    <!-- 查询订单列表（包含医生、用户信息） -->
+    <select id="selectOrderWithInfo" resultType="java.util.Map">
+        SELECT o.id, o.user_id, o.doctor_id, o.schedule_id, o.source_id, o.dept_name, o.work_date, o.work_time,
+               o.order_status, o.create_time, o.update_time,
+               d.doctor_name, d.title, d.avatar,
+               u.nick_name as patient_name, u.username as patient_username
+        FROM hos_appointment_order o
+        LEFT JOIN hos_doctor d ON o.doctor_id = d.id
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        WHERE o.deleted = 0
+        <if test="params.userId != null">
+            AND o.user_id = #{params.userId}
+        </if>
+        <if test="params.doctorId != null">
+            AND o.doctor_id = #{params.doctorId}
+        </if>
+        <if test="params.deptName != null and params.deptName != ''">
+            AND o.dept_name LIKE CONCAT('%', #{params.deptName}, '%')
+        </if>
+        <if test="params.orderStatus != null">
+            AND o.order_status = #{params.orderStatus}
+        </if>
+        <if test="params.startDate != null">
+            AND o.work_date &gt;= #{params.startDate}
+        </if>
+        <if test="params.endDate != null">
+            AND o.work_date &lt;= #{params.endDate}
+        </if>
+        ORDER BY o.create_time DESC
+    </select>
+
+    <!-- 根据ID查询订单详情（包含医生、用户、科室信息） -->
+    <select id="selectOrderDetailById" resultType="java.util.Map">
+        SELECT o.id, o.user_id, o.doctor_id, o.schedule_id, o.source_id, o.dept_name, o.work_date, o.work_time,
+               o.order_status, o.create_time, o.update_time,
+               d.doctor_name, d.title, d.specialty, d.avatar,
+               u.nick_name as patient_name, u.username as patient_username
+        FROM hos_appointment_order o
+        LEFT JOIN hos_doctor d ON o.doctor_id = d.id
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        WHERE o.id = #{id} AND o.deleted = 0
+    </select>
+
+    <!-- 检查用户是否已预约同一医生同一时段 -->
+    <select id="checkAppointmentExists" resultType="int">
+        SELECT COUNT(*) FROM hos_appointment_order
+        WHERE user_id = #{userId}
+          AND doctor_id = #{doctorId}
+          AND schedule_id = #{scheduleId}
+          AND order_status = 1
+          AND deleted = 0
+    </select>
+
+    <!-- 统计各科室挂号数量 -->
+    <select id="countByDepartment" resultType="java.util.Map">
+        SELECT dept_name as name, COUNT(*) as value
+        FROM hos_appointment_order
+        WHERE deleted = 0
+        GROUP BY dept_name
+        ORDER BY value DESC
+        LIMIT 10
+    </select>
+
+    <!-- 统计各医生预约数量 -->
+    <select id="countByDoctor" resultType="java.util.Map">
+        SELECT d.doctor_name as name, COUNT(*) as value
+        FROM hos_appointment_order o
+        LEFT JOIN hos_doctor d ON o.doctor_id = d.id
+        WHERE o.deleted = 0
+        GROUP BY o.doctor_id
+        ORDER BY value DESC
+        LIMIT 10
+    </select>
+
+</mapper>

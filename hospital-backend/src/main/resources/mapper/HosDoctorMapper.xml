@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.mapper.HosDoctorMapper">
+
+    <!-- 查询医生列表（包含科室信息） -->
+    <select id="selectDoctorWithInfo" resultType="java.util.Map">
+        SELECT d.id, d.user_id, d.dept_id, d.doctor_name, d.title, d.specialty, d.doctor_desc, d.avatar, d.status,
+               dept.dept_name, u.username
+        FROM hos_doctor d
+        LEFT JOIN hos_department dept ON d.dept_id = dept.id
+        LEFT JOIN sys_user u ON d.user_id = u.id
+        WHERE d.deleted = 0
+        <if test="params.deptId != null">
+            AND d.dept_id = #{params.deptId}
+        </if>
+        <if test="params.doctorName != null and params.doctorName != ''">
+            AND d.doctor_name LIKE CONCAT('%', #{params.doctorName}, '%')
+        </if>
+        <if test="params.status != null">
+            AND d.status = #{params.status}
+        </if>
+        ORDER BY d.create_time DESC
+    </select>
+
+    <!-- 根据ID查询医生详情（包含科室信息） -->
+    <select id="selectDoctorDetailById" resultType="java.util.Map">
+        SELECT d.id, d.user_id, d.dept_id, d.doctor_name, d.title, d.specialty, d.doctor_desc, d.avatar, d.status,
+               d.create_time, d.update_time,
+               dept.dept_name, dept.dept_desc, u.username
+        FROM hos_doctor d
+        LEFT JOIN hos_department dept ON d.dept_id = dept.id
+        LEFT JOIN sys_user u ON d.user_id = u.id
+        WHERE d.id = #{id} AND d.deleted = 0
+    </select>
+
+    <!-- 根据科室ID统计医生数量 -->
+    <select id="countByDeptId" resultType="int">
+        SELECT COUNT(*) FROM hos_doctor WHERE dept_id = #{deptId} AND deleted = 0
+    </select>
+
+</mapper>

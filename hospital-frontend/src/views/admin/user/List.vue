@@ -1,0 +1,165 @@
+<template>
+  <div class="user-page">
+    <div class="page-header">
+      <h2>用户管理</h2>
+    </div>
+    
+    <div class="search-form">
+      <el-form :inline="true" :model="searchForm">
+        <el-form-item label="用户名">
+          <el-input v-model="searchForm.username" placeholder="请输入用户名" clearable />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+            <el-option label="正常" :value="1" />
+            <el-option label="停用" :value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    
+    <el-table :data="tableData" stripe border style="width: 100%">
+      <el-table-column prop="id" label="ID" width="80" />
+      <el-table-column prop="username" label="用户名" width="150" />
+      <el-table-column prop="nickName" label="昵称" width="150" />
+      <el-table-column prop="roleName" label="角色" width="120" />
+      <el-table-column prop="status" label="状态" width="100">
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
+            {{ scope.row.status === 1 ? '正常' : '停用' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="createTime" label="注册时间" width="180" />
+      <el-table-column label="操作" width="150" fixed="right">
+        <template slot-scope="scope">
+          <el-button 
+            type="text" 
+            size="small" 
+            :style="{ color: scope.row.status === 1 ? '#E6A23C' : '#67C23A' }"
+            @click="handleToggleStatus(scope.row)"
+          >
+            {{ scope.row.status === 1 ? '停用' : '启用' }}
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    
+    <div class="pagination-container">
+      <el-pagination
+        background
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        :page-size="pageSize"
+        :current-page="currentPage"
+        :page-sizes="[10, 20, 50, 100]"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+  </div>
+</template>
+
+<script>
+import { getUserPage, updateUserStatus } from '@/api/auth'
+
+export default {
+  name: 'UserList',
+  data() {
+    return {
+      searchForm: {
+        username: '',
+        status: null
+      },
+      tableData: [],
+      total: 0,
+      currentPage: 1,
+      pageSize: 10
+    }
+  },
+  created() {
+    this.loadData()
+  },
+  methods: {
+    async loadData() {
+      try {
+        const res = await getUserPage({
+          current: this.currentPage,
+          size: this.pageSize,
+          ...this.searchForm
+        })
+        this.tableData = res.data.records
+        this.total = res.data.total
+      } catch (error) {
+        console.error('加载数据失败:', error)
+      }
+    },
+    handleSearch() {
+      this.currentPage = 1
+      this.loadData()
+    },
+    handleReset() {
+      this.searchForm = { username: '', status: null }
+      this.handleSearch()
+    },
+    handleSizeChange(val) {
+      this.pageSize = val
+      this.loadData()
+    },
+    handleCurrentChange(val) {
+      this.currentPage = val
+      this.loadData()
+    },
+    handleToggleStatus(row) {
+      const newStatus = row.status === 1 ? 0 : 1
+      const action = newStatus === 0 ? '停用' : '启用'
+      this.$confirm(`确定要${action}该用户账号吗？`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        await updateUserStatus(row.id, newStatus)
+        this.$message.success(`${action}成功`)
+        this.loadData()
+      }).catch(() => {})
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.user-page {
+  padding: 20px;
+  background: #fff;
+  border-radius: 4px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #333;
+  }
+}
+
+.search-form {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #f5f7fa;
+  border-radius: 4px;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  text-align: right;
+}
+</style>

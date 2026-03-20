@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.mapper.HosNumberSourceMapper">
+
+    <!-- 扣减号源库存（使用乐观锁） -->
+    <update id="decreaseRemainNumber">
+        UPDATE hos_number_source
+        SET remain_number = remain_number - 1,
+            version = version + 1,
+            update_time = NOW()
+        WHERE id = #{id}
+          AND version = #{version}
+          AND remain_number > 0
+    </update>
+
+    <!-- 增加号源库存 -->
+    <update id="increaseRemainNumber">
+        UPDATE hos_number_source
+        SET remain_number = remain_number + 1,
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据排班ID查询号源信息 -->
+    <select id="selectByScheduleId" resultType="com.hospital.entity.HosNumberSource">
+        SELECT id, schedule_id, doctor_id, total_number, remain_number, source_status, version, create_time, update_time
+        FROM hos_number_source
+        WHERE schedule_id = #{scheduleId}
+    </select>
+
+</mapper>
