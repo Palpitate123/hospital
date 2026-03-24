@@ -182,26 +182,52 @@ const router = new VueRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   document.title = to.meta.title ? `${to.meta.title} - 医院预约挂号系统` : '医院预约挂号系统'
   
   const token = getToken()
+  const whiteList = ['/login', '/register']
+  const isWhiteList = whiteList.includes(to.path)
   
-  if (to.meta.requireAuth && !token) {
-    next('/login')
+  if (!token) {
+    if (isWhiteList) {
+      next()
+    } else {
+      next('/login')
+    }
     return
   }
   
-  if (token) {
+  if (token && !store.state.user.userId) {
+    try {
+      await store.dispatch('user/getUserInfo')
+    } catch (error) {
+      store.commit('user/CLEAR_USER')
+      next('/login')
+      return
+    }
+  }
+  
+  if (isWhiteList) {
     const roleCode = store.getters.roleCode
-    if (to.meta.requireAdmin && roleCode !== 'admin') {
+    if (roleCode === 'admin') {
+      next('/admin/dashboard')
+    } else if (roleCode === 'doctor') {
+      next('/doctor/dashboard')
+    } else {
       next('/home')
-      return
     }
-    if (to.meta.requireDoctor && roleCode !== 'doctor') {
-      next('/home')
-      return
-    }
+    return
+  }
+  
+  const roleCode = store.getters.roleCode
+  if (to.meta.requireAdmin && roleCode !== 'admin') {
+    next('/home')
+    return
+  }
+  if (to.meta.requireDoctor && roleCode !== 'doctor') {
+    next('/home')
+    return
   }
   
   next()

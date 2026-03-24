@@ -156,6 +156,8 @@ export default {
   methods: {
     async loadStatsData() {
       try {
+        console.log('开始加载Dashboard数据...')
+        
         const [totalRes, todayRes, deptRes, doctorRes, ordersRes] = await Promise.all([
           getTotalStats(),
           getTodayStats(),
@@ -164,11 +166,25 @@ export default {
           getOrderPage({ current: 1, size: 10 })
         ])
         
+        console.log('=== 接口返回数据 ===')
+        console.log('totalRes:', totalRes)
+        console.log('todayRes:', todayRes)
+        console.log('deptRes:', deptRes)
+        console.log('doctorRes:', doctorRes)
+        console.log('ordersRes:', ordersRes)
+        
         this.statsData.totalOrders = totalRes.data || 0
         this.statsData.todayOrders = todayRes.data || 0
         this.statsData.totalDepartments = deptRes.data ? deptRes.data.length : 0
         this.statsData.totalDoctors = doctorRes.data ? doctorRes.data.total : 0
         this.recentOrders = ordersRes.data ? ordersRes.data.records : []
+        
+        console.log('=== 赋值后的statsData ===')
+        console.log('statsData:', JSON.stringify(this.statsData))
+        console.log('totalOrders:', this.statsData.totalOrders)
+        console.log('todayOrders:', this.statsData.todayOrders)
+        console.log('totalDepartments:', this.statsData.totalDepartments)
+        console.log('totalDoctors:', this.statsData.totalDoctors)
         
         this.loadChartData()
       } catch (error) {

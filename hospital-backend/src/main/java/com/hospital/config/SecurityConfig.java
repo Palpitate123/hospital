@@ -95,6 +95,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         "/schedule/page",
                         "/schedule/doctor/*",
                         "/schedule/*",
+                        "/appointment/stats/*",
+                        "/appointment/page",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
                         "/v3/api-docs/**",

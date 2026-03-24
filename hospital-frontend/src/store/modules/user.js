@@ -40,7 +40,13 @@ const actions = {
         .then(response => {
           const data = response.data
           commit('SET_TOKEN', data.token)
-          commit('SET_USER_INFO', data)
+          commit('SET_USER_INFO', {
+            userId: data.userId,
+            username: data.username,
+            nickName: data.nickName,
+            roleCode: data.roleCode,
+            roleName: data.roleName
+          })
           resolve()
         })
         .catch(error => {
