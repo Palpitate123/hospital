@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import org.apache.ibatis.reflection.MetaObject;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
  * @version 1.0.0
  */
 @Configuration
+@MapperScan("com.hospital.mapper") // 【核心修改】添加Mapper扫描，确保Mapper接口被Spring管理
 public class MyBatisPlusConfig {
 
     /**

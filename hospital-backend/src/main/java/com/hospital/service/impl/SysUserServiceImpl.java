@@ -1,0 +1,12 @@
+package com.hospital.service.impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hospital.entity.SysUser;
+import com.hospital.mapper.SysUserMapper;
+import com.hospital.service.SysUserService;
+import org.springframework.stereotype.Service;
+
+@Service
+public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
+
+}

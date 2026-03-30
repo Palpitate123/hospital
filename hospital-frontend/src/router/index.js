@@ -40,7 +40,7 @@ const routes = [
   {
     path: '/',
     component: () => import('@/views/layout/PatientLayout.vue'),
-    redirect: '/home',
+    redirect: '/login',
     children: [
       {
         path: 'home',

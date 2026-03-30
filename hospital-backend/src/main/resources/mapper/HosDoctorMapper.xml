@@ -3,7 +3,7 @@
 <mapper namespace="com.hospital.mapper.HosDoctorMapper">
 
     <!-- 查询医生列表（包含科室信息） -->
-    <select id="selectDoctorWithInfo" resultType="java.util.Map">
+    <select id="selectDoctorWithDept" resultType="java.util.Map">
         SELECT d.id, d.user_id, d.dept_id, d.doctor_name, d.title, d.specialty, d.doctor_desc, d.avatar, d.status,
                dept.dept_name, u.username
         FROM hos_doctor d

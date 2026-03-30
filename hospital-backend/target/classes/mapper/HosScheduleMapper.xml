@@ -3,12 +3,24 @@
 <mapper namespace="com.hospital.mapper.HosScheduleMapper">
 
     <!-- 查询排班列表（包含医生、科室、号源信息） -->
+    <!-- 【关键修改】给所有字段加了驼峰别名，和前端Vue的 prop 完全一致 -->
     <select id="selectScheduleWithInfo" resultType="java.util.Map">
-        SELECT s.id, s.doctor_id, s.dept_id, s.work_date, s.work_time, s.total_number, s.schedule_status,
-               s.create_time, s.update_time,
-               d.doctor_name, d.title, d.avatar,
-               dept.dept_name,
-               ns.remain_number, ns.source_status
+        SELECT
+        s.id,
+        s.doctor_id,
+        s.dept_id,
+        s.work_date AS workDate,          <!-- 别名：work_date → workDate -->
+        s.work_time AS workTime,          <!-- 别名：work_time → workTime -->
+        s.total_number AS totalNumber,    <!-- 别名：total_number → totalNumber -->
+        s.schedule_status AS scheduleStatus, <!-- 别名：schedule_status → scheduleStatus -->
+        s.create_time,
+        s.update_time,
+        d.doctor_name AS doctorName,      <!-- 别名：doctor_name → doctorName -->
+        d.title,
+        d.avatar,
+        dept.dept_name AS deptName,       <!-- 别名：dept_name → deptName -->
+        ns.remain_number AS remainNumber, <!-- 别名：remain_number → remainNumber -->
+        ns.source_status
         FROM hos_schedule s
         LEFT JOIN hos_doctor d ON s.doctor_id = d.id
         LEFT JOIN hos_department dept ON s.dept_id = dept.id
@@ -43,9 +55,9 @@
                dept.dept_name, dept.dept_desc,
                ns.id as source_id, ns.remain_number, ns.source_status, ns.version
         FROM hos_schedule s
-        LEFT JOIN hos_doctor d ON s.doctor_id = d.id
-        LEFT JOIN hos_department dept ON s.dept_id = dept.id
-        LEFT JOIN hos_number_source ns ON s.id = ns.schedule_id
+                 LEFT JOIN hos_doctor d ON s.doctor_id = d.id
+                 LEFT JOIN hos_department dept ON s.dept_id = dept.id
+                 LEFT JOIN hos_number_source ns ON s.id = ns.schedule_id
         WHERE s.id = #{id} AND s.deleted = 0
     </select>
 
@@ -53,9 +65,9 @@
     <select id="checkScheduleConflict" resultType="int">
         SELECT COUNT(*) FROM hos_schedule
         WHERE doctor_id = #{schedule.doctorId}
-          AND work_date = #{schedule.workDate}
-          AND work_time = #{schedule.workTime}
-          AND deleted = 0
+        AND work_date = #{schedule.workDate}
+        AND work_time = #{schedule.workTime}
+        AND deleted = 0
         <if test="schedule.id != null">
             AND id != #{schedule.id}
         </if>

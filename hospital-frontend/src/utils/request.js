@@ -3,79 +3,60 @@ import { Message } from 'element-ui'
 import { getToken, removeToken } from '@/utils/auth'
 import router from '@/router'
 
+// 【核心强制指定】后端的完整地址，绝对不会再请求到8081
+const BASE_API = 'http://localhost:8080/api'
+
 const service = axios.create({
-  baseURL: process.env.VUE_APP_BASE_API || '/api',
-  timeout: 15000
+  baseURL: BASE_API, // 强制使用完整后端地址
+  timeout: 15000,
+  // 强制不跟随前端地址，确保请求到后端
+  withCredentials: false
 })
 
+// 请求拦截器
 service.interceptors.request.use(
-  config => {
-    const token = getToken()
-    if (token) {
-      config.headers['Authorization'] = 'Bearer ' + token
+    config => {
+      // 【强制打印请求地址】F12控制台可以看到最终请求的完整地址，方便排查
+      console.log('最终请求地址：', BASE_API + config.url)
+      const token = getToken()
+      if (token) {
+        config.headers['Authorization'] = 'Bearer ' + token
+      }
+      return config
+    },
+    error => {
+      console.error('请求错误:', error)
+      return Promise.reject(error)
     }
-    return config
-  },
-  error => {
-    console.error('Request error:', error)
-    return Promise.reject(error)
-  }
 )
 
+// 响应拦截器
 service.interceptors.response.use(
-  response => {
-    const res = response.data
-    if (res.code !== 200) {
+    response => {
+      const res = response.data
+      if (res.code !== 200) {
+        Message({
+          message: res.message || '请求失败',
+          type: 'error',
+          duration: 3000
+        })
+        if (res.code === 401) {
+          removeToken()
+          router.push('/login')
+        }
+        return Promise.reject(new Error(res.message || '请求失败'))
+      }
+      return res
+    },
+    error => {
+      console.error('响应错误:', error)
       Message({
-        message: res.message || '系统异常，请稍后再试',
+        message: error.message || '网络错误',
         type: 'error',
         duration: 3000
       })
-      if (res.code === 401) {
-        removeToken()
-        router.push('/login')
-      }
-      return Promise.reject(new Error(res.message || '系统异常'))
+      return Promise.reject(error)
     }
-    return res
-  },
-  error => {
-    console.error('Response error:', error)
-    let message = '系统异常，请稍后再试'
-    if (error.response) {
-      switch (error.response.status) {
-        case 400:
-          message = '请求参数错误'
-          break
-        case 401:
-          message = '登录已过期，请重新登录'
-          removeToken()
-          router.push('/login')
-          break
-        case 403:
-          message = '没有权限访问'
-          break
-        case 404:
-          message = '请求的资源不存在'
-          break
-        case 500:
-          message = '服务器内部错误'
-          break
-        default:
-          message = error.response.data?.message || '系统异常'
-      }
-    } else if (error.message.includes('timeout')) {
-      message = '请求超时，请稍后再试'
-    } else if (error.message.includes('Network')) {
-      message = '网络连接异常，请检查网络'
-    }
-    Message({
-      message,
-      type: 'error',
-      duration: 3000
-    })
-    return Promise.reject(error)
-  }
 )
 
 export default service

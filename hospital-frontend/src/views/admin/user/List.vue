@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2>用户管理</h2>
     </div>
-    
+
     <div class="search-form">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="用户名">
@@ -21,7 +21,7 @@
         </el-form-item>
       </el-form>
     </div>
-    
+
     <el-table :data="tableData" stripe border style="width: 100%">
       <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="username" label="用户名" width="150" />
@@ -37,35 +37,35 @@
       <el-table-column prop="createTime" label="注册时间" width="180" />
       <el-table-column label="操作" width="150" fixed="right">
         <template slot-scope="scope">
-          <el-button 
-            type="text" 
-            size="small" 
-            :style="{ color: scope.row.status === 1 ? '#E6A23C' : '#67C23A' }"
-            @click="handleToggleStatus(scope.row)"
+          <el-button
+              type="text"
+              size="small"
+              :style="{ color: scope.row.status === 1 ? '#E6A23C' : '#67C23A' }"
+              @click="handleToggleStatus(scope.row)"
           >
             {{ scope.row.status === 1 ? '停用' : '启用' }}
           </el-button>
         </template>
       </el-table-column>
     </el-table>
-    
+
     <div class="pagination-container">
       <el-pagination
-        background
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        :page-size="pageSize"
-        :current-page="currentPage"
-        :page-sizes="[10, 20, 50, 100]"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          :page-size="pageSize"
+          :current-page="currentPage"
+          :page-sizes="[10, 20, 50, 100]"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
       />
     </div>
   </div>
 </template>
 
 <script>
-import { getUserPage, updateUserStatus } from '@/api/auth'
+import { getUserPage, updateUserStatus } from '@/api/user'
 
 export default {
   name: 'UserList',
@@ -143,7 +143,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  
+
   h2 {
     margin: 0;
     font-size: 20px;

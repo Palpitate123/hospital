@@ -95,7 +95,8 @@ export default {
     return {
       loginForm: {
         username: '',
-        password: ''
+        password: '',
+        rememberMe: false
       },
       loginRules: {
         username: [
@@ -116,6 +117,12 @@ export default {
       this.$refs.loginForm.validate(async valid => {
         if (!valid) return
         
+        if (this.loginForm.rememberMe) {
+        localStorage.setItem('remembered_username', this.loginForm.username)
+      } else {
+        localStorage.removeItem('remembered_username')
+      }
+
         this.loading = true
         try {
           await this.login(this.loginForm)
@@ -131,11 +138,19 @@ export default {
           }
         } catch (error) {
           console.error('登录失败:', error)
+          this.$message.error(error.response?.data?.message || '登录失败，请检查用户名和密码')
         } finally {
           this.loading = false
         }
       })
+    },
+    mounted() {
+    const rememberedUsername = localStorage.getItem('remembered_username')
+    if (rememberedUsername) {
+      this.loginForm.username = rememberedUsername
+      this.loginForm.rememberMe = true
     }
+   }
   }
 }
 </script>
