@@ -808,3 +808,5 @@ Caused by: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'x
 2026-04-02 14:13:54.473  INFO 43572 --- [http-nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
 2026-04-02 14:13:55.104  INFO 43572 --- [http-nio-8080-exec-4] c.hospital.service.impl.AuthServiceImpl  : 用户登录成功: admin
 2026-04-02 14:14:30.034  INFO 43572 --- [http-nio-8080-exec-5] c.hospital.service.impl.AuthServiceImpl  : 用户登录成功: xuling
+2026-04-02 14:16:55.475  INFO 43572 --- [SpringApplicationShutdownHook] com.alibaba.druid.pool.DruidDataSource   : {dataSource-1} closing ...
+2026-04-02 14:16:55.480  INFO 43572 --- [SpringApplicationShutdownHook] com.alibaba.druid.pool.DruidDataSource   : {dataSource-1} closed
