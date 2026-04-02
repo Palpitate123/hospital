@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2>订单管理</h2>
     </div>
-    
+
     <div class="search-form">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="科室名称">
@@ -22,61 +22,66 @@
         </el-form-item>
       </el-form>
     </div>
-    
+
     <el-table :data="tableData" stripe border style="width: 100%">
-      <el-table-column prop="patientName" label="患者" width="120" />
-      <el-table-column prop="doctorName" label="医生" width="120" />
-      <el-table-column prop="deptName" label="科室" width="120" />
-      <el-table-column prop="workDate" label="预约日期" width="120" />
-      <el-table-column prop="workTime" label="时段" width="100" />
-      <el-table-column prop="orderStatus" label="状态" width="100">
+      <el-table-column prop="patient_name" label="患者" width="120" />
+      <el-table-column prop="doctor_name" label="医生" width="120" />
+      <el-table-column prop="dept_name" label="科室" width="120" />
+      <el-table-column prop="work_date" label="预约日期" width="120" />
+      <el-table-column prop="work_time" label="时段" width="100" />
+
+      <el-table-column label="状态" width="100">
         <template slot-scope="scope">
-          <el-tag :type="getStatusType(scope.row.orderStatus)">
-            {{ getStatusText(scope.row.orderStatus) }}
+          <el-tag :type="getStatusType(scope.row.order_status)">
+            {{ getStatusText(scope.row.order_status) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="预约时间" width="180" />
+
+      <el-table-column prop="create_time" label="预约时间" min-width="180" />
+
       <el-table-column label="操作" width="150" fixed="right">
         <template slot-scope="scope">
           <el-button type="text" size="small" @click="handleDetail(scope.row)">详情</el-button>
-          <el-button type="text" size="small" style="color: #F56C6C" @click="handleCancel(scope.row)" v-if="scope.row.orderStatus === 1">取消</el-button>
+          <el-button type="text" size="small" style="color: #E6A23C" @click="handleCancel(scope.row)" v-if="scope.row.order_status === 1 || scope.row.order_status === true">取消</el-button>
+          <el-button type="text" size="small" style="color: #F56C6C" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-    
+
     <div class="pagination-container">
       <el-pagination
-        background
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        :page-size="pageSize"
-        :current-page="currentPage"
-        :page-sizes="[10, 20, 50, 100]"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          :page-size="pageSize"
+          :current-page="currentPage"
+          :page-sizes="[10, 20, 50, 100]"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
       />
     </div>
-    
+
     <el-dialog title="订单详情" :visible.sync="dialogVisible" width="500px">
       <el-descriptions :column="1" border>
         <el-descriptions-item label="订单ID">{{ orderDetail.id }}</el-descriptions-item>
-        <el-descriptions-item label="患者姓名">{{ orderDetail.patientName }}</el-descriptions-item>
-        <el-descriptions-item label="医生姓名">{{ orderDetail.doctorName }}</el-descriptions-item>
-        <el-descriptions-item label="科室">{{ orderDetail.deptName }}</el-descriptions-item>
-        <el-descriptions-item label="预约日期">{{ orderDetail.workDate }}</el-descriptions-item>
-        <el-descriptions-item label="预约时段">{{ orderDetail.workTime }}</el-descriptions-item>
+        <el-descriptions-item label="患者姓名">{{ orderDetail.patient_name }}</el-descriptions-item>
+        <el-descriptions-item label="医生姓名">{{ orderDetail.doctor_name }}</el-descriptions-item>
+        <el-descriptions-item label="科室">{{ orderDetail.dept_name }}</el-descriptions-item>
+        <el-descriptions-item label="预约日期">{{ orderDetail.work_date }}</el-descriptions-item>
+        <el-descriptions-item label="预约时段">{{ orderDetail.work_time }}</el-descriptions-item>
         <el-descriptions-item label="订单状态">
-          <el-tag :type="getStatusType(orderDetail.orderStatus)">{{ getStatusText(orderDetail.orderStatus) }}</el-tag>
+          <el-tag :type="getStatusType(orderDetail.order_status)">{{ getStatusText(orderDetail.order_status) }}</el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="预约时间">{{ orderDetail.createTime }}</el-descriptions-item>
+        <el-descriptions-item label="预约时间">{{ orderDetail.create_time }}</el-descriptions-item>
       </el-descriptions>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { getOrderPage, getOrderDetail, forceCancelOrder } from '@/api/appointment'
+// 【修复点3】顶部引入 deleteOrder 方法
+import { getOrderPage, getOrderDetail, forceCancelOrder, deleteOrder } from '@/api/appointment'
 
 export default {
   name: 'OrderList',
@@ -147,11 +152,29 @@ export default {
         this.loadData()
       }).catch(() => {})
     },
+    // 【修复点4】新增删除订单记录方法
+    handleDelete(row) {
+      this.$confirm('确定要删除该订单记录吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        await deleteOrder(row.id)
+        this.$message.success('删除成功')
+        this.loadData()
+      }).catch(() => {})
+    },
+    // 【修复点5】完美兼容布尔值的状态转换
     getStatusType(status) {
+      if (status === true) status = 1;
+      // 如果存的是 0 或 false 代表取消，可以追加：if (status === false) status = 2;
+
       const types = { 1: 'primary', 2: 'danger', 3: 'success' }
       return types[status] || 'info'
     },
     getStatusText(status) {
+      if (status === true) status = 1;
+
       const texts = { 1: '待就诊', 2: '已取消', 3: '已完成' }
       return texts[status] || '未知'
     }
@@ -171,7 +194,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  
+
   h2 {
     margin: 0;
     font-size: 20px;

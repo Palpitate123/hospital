@@ -4,7 +4,7 @@
       <h2>医生管理</h2>
       <el-button type="primary" icon="el-icon-plus" @click="handleAdd">新增医生</el-button>
     </div>
-    
+
     <div class="search-form">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="科室">
@@ -27,57 +27,64 @@
         </el-form-item>
       </el-form>
     </div>
-    
+
     <el-table :data="tableData" stripe border style="width: 100%">
       <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="doctorName" label="医生姓名" width="120" />
-      <el-table-column prop="deptName" label="所属科室" width="120" />
+
+      <el-table-column prop="doctor_name" label="医生姓名" width="120" />
+      <el-table-column prop="dept_name" label="所属科室" width="120" />
+
       <el-table-column prop="title" label="职称" width="120" />
       <el-table-column prop="specialty" label="专业擅长" min-width="200" show-overflow-tooltip />
+
       <el-table-column prop="status" label="状态" width="100">
         <template slot-scope="scope">
-          <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-            {{ scope.row.status === 1 ? '正常' : '停用' }}
+          <el-tag :type="scope.row.status === 1 || scope.row.status === true ? 'success' : 'danger'">
+            {{ scope.row.status === 1 || scope.row.status === true ? '正常' : '停用' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="创建时间" width="180" />
+
+      <el-table-column prop="create_time" label="创建时间" width="180" />
+
       <el-table-column label="操作" width="200" fixed="right">
         <template slot-scope="scope">
           <el-button type="text" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-          <el-button 
-            type="text" 
-            size="small" 
-            :style="{ color: scope.row.status === 1 ? '#E6A23C' : '#67C23A' }"
-            @click="handleToggleStatus(scope.row)"
+
+          <el-button
+              type="text"
+              size="small"
+              :style="{ color: scope.row.status === 1 || scope.row.status === true ? '#E6A23C' : '#67C23A' }"
+              @click="handleToggleStatus(scope.row)"
           >
-            {{ scope.row.status === 1 ? '停用' : '启用' }}
+            {{ scope.row.status === 1 || scope.row.status === true ? '停用' : '启用' }}
           </el-button>
+
           <el-button type="text" size="small" style="color: #F56C6C" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-    
+
     <div class="pagination-container">
       <el-pagination
-        background
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        :page-size="pageSize"
-        :current-page="currentPage"
-        :page-sizes="[10, 20, 50, 100]"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          :page-size="pageSize"
+          :current-page="currentPage"
+          :page-sizes="[10, 20, 50, 100]"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
       />
     </div>
-    
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px">
+
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px" @close="resetForm">
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="用户名" prop="username" v-if="!form.id">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
+          <el-input v-model="form.username" placeholder="请输入用于登录的用户名" />
         </el-form-item>
         <el-form-item label="密码" prop="password" v-if="!form.id">
-          <el-input v-model="form.password" type="password" placeholder="请输入密码" />
+          <el-input v-model="form.password" type="password" placeholder="请输入登录密码" />
         </el-form-item>
         <el-form-item label="所属科室" prop="deptId">
           <el-select v-model="form.deptId" placeholder="请选择科室" style="width: 100%">
@@ -88,7 +95,7 @@
           <el-input v-model="form.doctorName" placeholder="请输入医生姓名" />
         </el-form-item>
         <el-form-item label="职称" prop="title">
-          <el-input v-model="form.title" placeholder="请输入职称" />
+          <el-input v-model="form.title" placeholder="请输入职称 (如: 主任医师)" />
         </el-form-item>
         <el-form-item label="专业擅长" prop="specialty">
           <el-input v-model="form.specialty" type="textarea" :rows="2" placeholder="请输入专业擅长" />
@@ -186,23 +193,53 @@ export default {
       this.currentPage = val
       this.loadData()
     },
+    resetForm() {
+      if (this.$refs.form) {
+        this.$refs.form.clearValidate()
+      }
+    },
     handleAdd() {
       this.dialogTitle = '新增医生'
-      this.form = { id: null, username: '', password: '', deptId: null, doctorName: '', title: '', specialty: '', doctorDesc: '' }
+      this.form = {
+        id: null,
+        username: '',
+        password: '',
+        deptId: null,
+        doctorName: '',
+        title: '',
+        specialty: '',
+        doctorDesc: ''
+      }
       this.dialogVisible = true
     },
+
+    // 【已修复】手动字段映射，解决编辑弹窗不回显数据的问题
     handleEdit(row) {
       this.dialogTitle = '编辑医生'
-      this.form = { ...row }
+
+      this.form = {
+        id: row.id,
+        username: row.username || '',
+        password: '', // 编辑时不显示密码
+        deptId: row.dept_id,             // 下划线转驼峰
+        doctorName: row.doctor_name,     // 下划线转驼峰
+        title: row.title,
+        specialty: row.specialty,
+        doctorDesc: row.doctor_desc || '' // 下划线转驼峰
+      }
+
       this.dialogVisible = true
     },
+
     handleSubmit() {
       this.$refs.form.validate(async valid => {
         if (!valid) return
         this.submitLoading = true
         try {
           if (this.form.id) {
-            await updateDoctor(this.form)
+            const updateData = { ...this.form }
+            if (!updateData.password) delete updateData.password
+            await updateDoctor(updateData)
             this.$message.success('编辑成功')
           } else {
             await addDoctor(this.form)
@@ -217,9 +254,13 @@ export default {
         }
       })
     },
+
+    // 【已修复】同时兼容布尔值 true/false 和数字 1/0 的状态切换逻辑
     handleToggleStatus(row) {
-      const newStatus = row.status === 1 ? 0 : 1
-      const action = newStatus === 0 ? '停用' : '启用'
+      const isEnable = row.status === 1 || row.status === true;
+      const newStatus = isEnable ? 0 : 1;
+      const action = newStatus === 0 ? '停用' : '启用';
+
       this.$confirm(`确定要${action}该医生账号吗？`, '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -230,6 +271,7 @@ export default {
         this.loadData()
       }).catch(() => {})
     },
+
     handleDelete(row) {
       this.$confirm('确定要删除该医生吗？', '提示', {
         confirmButtonText: '确定',
@@ -257,7 +299,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  
+
   h2 {
     margin: 0;
     font-size: 20px;

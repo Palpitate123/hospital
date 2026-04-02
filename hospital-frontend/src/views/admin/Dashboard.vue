@@ -12,7 +12,7 @@
           </div>
         </div>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :lg="6">
         <div class="stats-card card-2">
           <div class="stats-icon">
@@ -24,7 +24,7 @@
           </div>
         </div>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :lg="6">
         <div class="stats-card card-3">
           <div class="stats-icon">
@@ -36,7 +36,7 @@
           </div>
         </div>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :lg="6">
         <div class="stats-card card-4">
           <div class="stats-icon">
@@ -49,17 +49,17 @@
         </div>
       </el-col>
     </el-row>
-    
+
     <el-row :gutter="20" class="chart-row">
       <el-col :xs="24" :lg="12">
         <div class="chart-card">
           <div class="chart-header">
-            <h3>各科室挂号量统计</h3>
+            <h3>各科室挂号量统计TOP10</h3>
           </div>
           <div class="chart-content" ref="departmentChart"></div>
         </div>
       </el-col>
-      
+
       <el-col :xs="24" :lg="12">
         <div class="chart-card">
           <div class="chart-header">
@@ -69,17 +69,17 @@
         </div>
       </el-col>
     </el-row>
-    
+
     <el-row :gutter="20" class="chart-row">
       <el-col :xs="24" :lg="12">
         <div class="chart-card">
           <div class="chart-header">
-            <h3>预约状态分布</h3>
+            <h3>预约状态分布 TOP3</h3>
           </div>
           <div class="chart-content" ref="statusChart"></div>
         </div>
       </el-col>
-      
+
       <el-col :xs="24" :lg="12">
         <div class="chart-card">
           <div class="chart-header">
@@ -89,7 +89,7 @@
         </div>
       </el-col>
     </el-row>
-    
+
     <el-row :gutter="20">
       <el-col :span="24">
         <div class="recent-orders">
@@ -155,74 +155,56 @@ export default {
   },
   methods: {
     async loadStatsData() {
-      console.log('开始加载Dashboard数据...')
-      
-      // 1. 总预约数 - 独立请求
+      // 1. 总预约数
       try {
         const totalRes = await getTotalStats()
-        console.log('总预约数接口返回:', totalRes)
-        // 根据接口响应结构调整：后端返回 {code:200, data:15, ...}
         this.statsData.totalOrders = totalRes.data !== undefined ? totalRes.data : 0
       } catch (error) {
-        console.error('获取总预约数失败:', error)
         this.statsData.totalOrders = 0
       }
 
-      // 2. 今日预约数 - 独立请求
+      // 2. 今日预约数
       try {
         const todayRes = await getTodayStats()
-        console.log('今日预约数接口返回:', todayRes)
         this.statsData.todayOrders = todayRes.data !== undefined ? todayRes.data : 0
       } catch (error) {
-        console.error('获取今日预约数失败:', error)
         this.statsData.todayOrders = 0
       }
 
-      // 3. 科室总数 - 独立请求
+      // 3. 科室总数
       try {
         const deptRes = await getDepartmentList()
-        console.log('科室列表接口返回:', deptRes)
         this.statsData.totalDepartments = deptRes.data && deptRes.data.length ? deptRes.data.length : 0
       } catch (error) {
-        console.error('获取科室列表失败:', error)
         this.statsData.totalDepartments = 0
       }
 
-      // 4. 医生总数 - 独立请求（隔离报错接口）
+      // 4. 医生总数
       try {
-        // 方案A：尝试用分页接口获取总数（如果报错会被catch）
         const doctorRes = await getDoctorPage({ current: 1, size: 1 })
-        console.log('医生分页接口返回:', doctorRes)
-        this.statsData.totalDoctors = doctorRes.data && doctorRes.data.total !== undefined ? doctorRes.data.total : 15 // 兜底用你数据库的15条
+        this.statsData.totalDoctors = doctorRes.data && doctorRes.data.total !== undefined ? doctorRes.data.total : 15
       } catch (error) {
-        console.warn('医生分页接口报错，使用兜底数据:', error)
-        // 方案B：分页接口报错时，直接用你数据库已知的15条医生数据兜底
         this.statsData.totalDoctors = 15
       }
 
-      // 5. 最近预约记录 - 独立请求
+      // 5. 最近预约记录
       try {
         const ordersRes = await getOrderPage({ current: 1, size: 10 })
-        console.log('预约记录接口返回:', ordersRes)
         this.recentOrders = ordersRes.data && ordersRes.data.records ? ordersRes.data.records : []
       } catch (error) {
-        console.error('获取预约记录失败:', error)
         this.recentOrders = []
       }
 
-      console.log('=== 最终赋值结果 ===', this.statsData)
-      
-      // 数据加载完成后，渲染图表
       this.loadChartData()
     },
-    
+
     async loadChartData() {
       try {
         const [deptStats, doctorStats] = await Promise.all([
           getDepartmentStats(),
           getDoctorStats()
         ])
-        
+
         this.updateDepartmentChart(deptStats.data || [])
         this.updateDoctorChart(doctorStats.data || [])
         this.updateStatusChart()
@@ -231,158 +213,172 @@ export default {
         console.error('加载图表数据失败:', error)
       }
     },
-    
+
     initCharts() {
       this.departmentChart = echarts.init(this.$refs.departmentChart)
       this.doctorChart = echarts.init(this.$refs.doctorChart)
       this.statusChart = echarts.init(this.$refs.statusChart)
       this.trendChart = echarts.init(this.$refs.trendChart)
     },
-    
+
+    // 【修改点 1】科室饼图改成：蓝青色渐变的水平柱状图
     updateDepartmentChart(data) {
+      // 获取前10条数据并排序（ECharts水平柱状图自下而上绘制，所以用降序再reverse）
+      const sortedData = [...data]
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10)
+        .reverse()
+
       const option = {
         tooltip: {
-          trigger: 'item',
-          formatter: '{b}: {c} ({d}%)'
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' }
         },
-        legend: {
-          orient: 'vertical',
-          right: '5%',
-          top: 'center'
+        grid: {
+          left: '3%', right: '12%', bottom: '3%', top: '5%', containLabel: true
+        },
+        xAxis: {
+          type: 'value',
+          splitLine: { show: true, lineStyle: { type: 'dashed', color: '#ebeef5' } },
+          axisLabel: { color: '#909399' }
+        },
+        yAxis: {
+          type: 'category',
+          data: sortedData.map(item => item.name),
+          axisLabel: { width: 80, overflow: 'truncate', color: '#303133', fontWeight: '500' },
+          axisLine: { show: false },
+          axisTick: { show: false }
         },
         series: [
           {
             name: '挂号量',
-            type: 'pie',
-            radius: ['40%', '70%'],
-            center: ['35%', '50%'],
-            avoidLabelOverlap: false,
+            type: 'bar',
+            data: sortedData.map(item => item.value),
+            barWidth: 16,
             itemStyle: {
-              borderRadius: 10,
-              borderColor: '#fff',
-              borderWidth: 2
+              // 蓝色到青色的渐变色
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#4facfe' },
+                { offset: 1, color: '#00f2fe' }
+              ]),
+              borderRadius: [0, 4, 4, 0]
             },
             label: {
-              show: false,
-              position: 'center'
-            },
-            emphasis: {
-              label: {
-                show: true,
-                fontSize: '18',
-                fontWeight: 'bold'
-              }
-            },
-            labelLine: {
-              show: false
-            },
-            data: data.map((item, index) => ({
-              ...item,
-              itemStyle: {
-                color: this.getChartColor(index)
-              }
-            }))
+              show: true,
+              position: 'right',
+              formatter: '{c}',
+              color: '#00f2fe',
+              fontWeight: 'bold',
+              fontSize: 13
+            }
           }
         ]
       }
       this.departmentChart.setOption(option)
     },
-    
+
+    // 医生榜单保持之前的紫色渐变
     updateDoctorChart(data) {
       const option = {
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          }
-        },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true
-        },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: '3%', right: '12%', bottom: '3%', top: '5%', containLabel: true },
         xAxis: {
-          type: 'value'
+          type: 'value',
+          splitLine: { show: true, lineStyle: { type: 'dashed', color: '#ebeef5' } },
+          axisLabel: { color: '#909399' }
         },
         yAxis: {
           type: 'category',
           data: data.map(item => item.name).reverse(),
-          axisLabel: {
-            width: 80,
-            overflow: 'truncate'
-          }
+          axisLabel: { width: 80, overflow: 'truncate', color: '#303133', fontWeight: '500' },
+          axisLine: { show: false },
+          axisTick: { show: false }
         },
         series: [
           {
             name: '预约量',
             type: 'bar',
-            data: data.map((item, index) => ({
-              value: item.value,
-              itemStyle: {
-                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                  { offset: 0, color: '#667eea' },
-                  { offset: 1, color: '#764ba2' }
-                ]),
-                borderRadius: [0, 4, 4, 0]
-              }
-            })).reverse(),
-            barWidth: 20
+            data: data.map(item => item.value).reverse(),
+            barWidth: 16,
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#667eea' },
+                { offset: 1, color: '#764ba2' }
+              ]),
+              borderRadius: [0, 4, 4, 0]
+            },
+            label: {
+              show: true, position: 'right', formatter: '{c}', color: '#764ba2', fontWeight: 'bold', fontSize: 13
+            }
           }
         ]
       }
       this.doctorChart.setOption(option)
     },
-    
+
+    // 【修改点 2】状态饼图改成：根据不同语义自带不同渐变色的粗柱状图
     updateStatusChart() {
       const pendingCount = this.recentOrders.filter(o => o.order_status === 1).length
       const cancelledCount = this.recentOrders.filter(o => o.order_status === 2).length
       const completedCount = this.recentOrders.filter(o => o.order_status === 3).length
-      
+
+      // 按数据大小进行排序，让柱状图呈现阶梯感
+      const statusData = [
+        { name: '待就诊', value: pendingCount, colors: ['#a1c4fd', '#c2e9fb'], labelColor: '#80b8ff' }, // 柔和蓝
+        { name: '已取消', value: cancelledCount, colors: ['#fbc2eb', '#a6c1ee'], labelColor: '#f5576c' }, // 柔和红粉
+        { name: '已完成', value: completedCount, colors: ['#43e97b', '#38f9d7'], labelColor: '#38f9d7' }  // 鲜活绿
+      ].sort((a, b) => a.value - b.value)
+
       const option = {
         tooltip: {
-          trigger: 'item'
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' }
         },
-        legend: {
-          bottom: '5%',
-          left: 'center'
+        grid: {
+          left: '3%', right: '12%', bottom: '3%', top: '5%', containLabel: true
+        },
+        xAxis: {
+          type: 'value',
+          splitLine: { show: true, lineStyle: { type: 'dashed', color: '#ebeef5' } },
+          axisLabel: { color: '#909399' }
+        },
+        yAxis: {
+          type: 'category',
+          data: statusData.map(item => item.name),
+          axisLabel: { width: 80, overflow: 'truncate', color: '#303133', fontWeight: '500' },
+          axisLine: { show: false },
+          axisTick: { show: false }
         },
         series: [
           {
-            name: '订单状态',
-            type: 'pie',
-            radius: ['50%', '70%'],
-            avoidLabelOverlap: false,
-            itemStyle: {
-              borderRadius: 10,
-              borderColor: '#fff',
-              borderWidth: 2
-            },
-            label: {
-              show: false,
-              position: 'center'
-            },
-            emphasis: {
+            name: '订单量',
+            type: 'bar',
+            data: statusData.map(item => ({
+              value: item.value,
+              itemStyle: {
+                // 每个状态使用各自专属的独立渐变色
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: item.colors[0] },
+                  { offset: 1, color: item.colors[1] }
+                ]),
+                borderRadius: [0, 4, 4, 0]
+              },
               label: {
                 show: true,
-                fontSize: '20',
-                fontWeight: 'bold'
+                position: 'right',
+                formatter: '{c}',
+                color: item.labelColor,
+                fontWeight: 'bold',
+                fontSize: 13
               }
-            },
-            labelLine: {
-              show: false
-            },
-            data: [
-              { value: pendingCount, name: '待就诊', itemStyle: { color: '#409EFF' } },
-              { value: cancelledCount, name: '已取消', itemStyle: { color: '#F56C6C' } },
-              { value: completedCount, name: '已完成', itemStyle: { color: '#67C23A' } }
-            ]
+            })),
+            barWidth: 24 // 数据只有三项，柱子加粗一点更好看
           }
         ]
       }
       this.statusChart.setOption(option)
     },
-    
+
     updateTrendChart() {
       const days = []
       const values = []
@@ -392,25 +388,12 @@ export default {
         days.push(`${date.getMonth() + 1}/${date.getDate()}`)
         values.push(Math.floor(Math.random() * 50) + 10)
       }
-      
+
       const option = {
-        tooltip: {
-          trigger: 'axis'
-        },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true
-        },
-        xAxis: {
-          type: 'category',
-          boundaryGap: false,
-          data: days
-        },
-        yAxis: {
-          type: 'value'
-        },
+        tooltip: { trigger: 'axis' },
+        grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+        xAxis: { type: 'category', boundaryGap: false, data: days },
+        yAxis: { type: 'value' },
         series: [
           {
             name: '预约数',
@@ -423,36 +406,26 @@ export default {
                 { offset: 1, color: 'rgba(102, 126, 234, 0.1)' }
               ])
             },
-            lineStyle: {
-              color: '#667eea',
-              width: 3
-            },
-            itemStyle: {
-              color: '#667eea'
-            }
+            lineStyle: { color: '#667eea', width: 3 },
+            itemStyle: { color: '#667eea' }
           }
         ]
       }
       this.trendChart.setOption(option)
     },
-    
+
     handleResize() {
       this.departmentChart && this.departmentChart.resize()
       this.doctorChart && this.doctorChart.resize()
       this.statusChart && this.statusChart.resize()
       this.trendChart && this.trendChart.resize()
     },
-    
-    getChartColor(index) {
-      const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7', '#fa709a', '#fee140']
-      return colors[index % colors.length]
-    },
-    
+
     getStatusType(status) {
       const types = { 1: 'primary', 2: 'danger', 3: 'success' }
       return types[status] || 'info'
     },
-    
+
     getStatusText(status) {
       const texts = { 1: '待就诊', 2: '已取消', 3: '已完成' }
       return texts[status] || '未知'
@@ -462,13 +435,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* 保持你的原样样式即可 */
 .dashboard-container {
   padding: 0;
 }
 
 .stats-row {
   margin-bottom: 20px;
-  
+
   .stats-card {
     background: #fff;
     border-radius: 8px;
@@ -478,12 +452,12 @@ export default {
     margin-bottom: 20px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     transition: all 0.3s;
-    
+
     &:hover {
       transform: translateY(-5px);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
-    
+
     .stats-icon {
       width: 60px;
       height: 60px;
@@ -492,13 +466,13 @@ export default {
       align-items: center;
       justify-content: center;
       margin-right: 20px;
-      
+
       i {
         font-size: 28px;
         color: #fff;
       }
     }
-    
+
     .stats-info {
       .stats-value {
         font-size: 28px;
@@ -506,46 +480,33 @@ export default {
         color: #333;
         line-height: 1.2;
       }
-      
+
       .stats-label {
         font-size: 14px;
         color: #999;
         margin-top: 5px;
       }
     }
-    
-    &.card-1 .stats-icon {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    &.card-2 .stats-icon {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    
-    &.card-3 .stats-icon {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    &.card-4 .stats-icon {
-      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
+
+    &.card-1 .stats-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    &.card-2 .stats-icon { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    &.card-3 .stats-icon { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    &.card-4 .stats-icon { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
   }
 }
 
-.chart-row {
-  margin-bottom: 20px;
-}
+.chart-row { margin-bottom: 20px; }
 
 .chart-card {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
-  
+
   .chart-header {
     padding: 15px 20px;
     border-bottom: 1px solid #f0f0f0;
-    
+
     h3 {
       margin: 0;
       font-size: 16px;
@@ -553,7 +514,7 @@ export default {
       color: #333;
     }
   }
-  
+
   .chart-content {
     height: 300px;
     padding: 10px;
@@ -564,14 +525,14 @@ export default {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  
+
   .section-header {
     padding: 15px 20px;
     border-bottom: 1px solid #f0f0f0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    
+
     h3 {
       margin: 0;
       font-size: 16px;
@@ -579,9 +540,7 @@ export default {
       color: #333;
     }
   }
-  
-  .el-table {
-    padding: 10px 20px;
-  }
+
+  .el-table { padding: 10px 20px; }
 }
 </style>

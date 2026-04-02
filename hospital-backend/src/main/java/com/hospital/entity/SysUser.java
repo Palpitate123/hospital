@@ -8,8 +8,7 @@ import java.time.LocalDateTime;
 
 /**
  * 系统用户实体类
- * 存储系统所有用户的通用账号信息
- * 
+ * 物理删除版本：删除后数据将从数据库彻底抹除
  * @author 徐凌
  * @version 1.0.0
  */
@@ -26,7 +25,7 @@ public class SysUser implements Serializable {
     private Long id;
 
     /**
-     * 登录用户名（唯一）
+     * 登录用户名（唯一索引）
      */
     private String username;
 
@@ -63,26 +62,25 @@ public class SysUser implements Serializable {
     private String remark;
 
     /**
-     * 逻辑删除标识：0-未删除，1-已删除
+     * 物理删除模式下，deleted字段仅作为状态记录
      */
-    @TableLogic
     private Integer deleted;
 
     /**
-     * 角色ID（关联查询）
+     * 角色ID（用于接收前端下拉框选中的ID，数据库无此字段）
      */
     @TableField(exist = false)
     private Long roleId;
 
     /**
-     * 角色编码（关联查询）
-     */
-    @TableField(exist = false)
-    private String roleCode;
-
-    /**
-     * 角色名称（关联查询）
+     * 角色名称（用于列表展示角色名，数据库无此字段）
      */
     @TableField(exist = false)
     private String roleName;
+
+    /**
+     * 角色编码（用于权限判断）
+     */
+    @TableField(exist = false)
+    private String roleCode;
 }

@@ -4,7 +4,7 @@
       <h2>排班管理</h2>
       <el-button type="primary" icon="el-icon-plus" @click="handleAdd">新增排班</el-button>
     </div>
-    
+
     <div class="search-form">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="科室">
@@ -28,55 +28,80 @@
         </el-form-item>
       </el-form>
     </div>
-    
+
     <el-table :data="tableData" stripe border style="width: 100%">
-      <el-table-column prop="doctorName" label="医生姓名" width="120" />
-      <el-table-column prop="deptName" label="科室" width="120" />
-      <el-table-column prop="workDate" label="出诊日期" width="120" />
-      <el-table-column prop="workTime" label="时段" width="100" />
-      <el-table-column prop="totalNumber" label="号源总量" width="100" />
+      <el-table-column prop="doctorName" label="医生姓名" width="120">
+        <template slot-scope="scope">{{ scope.row.doctorName || scope.row.doctor_name }}</template>
+      </el-table-column>
+      <el-table-column prop="deptName" label="科室" width="120">
+        <template slot-scope="scope">{{ scope.row.deptName || scope.row.dept_name }}</template>
+      </el-table-column>
+
+      <el-table-column prop="workDate" label="出诊日期" min-width="120">
+        <template slot-scope="scope">{{ scope.row.workDate || scope.row.work_date }}</template>
+      </el-table-column>
+
+      <el-table-column prop="workTime" label="时段" width="100">
+        <template slot-scope="scope">{{ scope.row.workTime || scope.row.work_time }}</template>
+      </el-table-column>
+      <el-table-column prop="totalNumber" label="号源总量" width="100">
+        <template slot-scope="scope">{{ scope.row.totalNumber || scope.row.total_number }}</template>
+      </el-table-column>
       <el-table-column prop="remainNumber" label="剩余号源" width="100">
         <template slot-scope="scope">
-          <span :style="{ color: scope.row.remainNumber <= 5 ? '#F56C6C' : '#67C23A' }">
-            {{ scope.row.remainNumber }}
+          <span :style="{ color: (scope.row.remainNumber || scope.row.remain_number) <= 5 ? '#F56C6C' : '#67C23A' }">
+            {{ scope.row.remainNumber || scope.row.remain_number }}
           </span>
         </template>
       </el-table-column>
-      <el-table-column prop="scheduleStatus" label="排班状态" width="100">
+
+      <el-table-column label="排班状态" width="100">
         <template slot-scope="scope">
-          <el-tag :type="getStatusType(scope.row.scheduleStatus)">
-            {{ getStatusText(scope.row.scheduleStatus) }}
+          <el-tag :type="getStatusType(getNormalizedStatus(scope.row))">
+            {{ getStatusText(getNormalizedStatus(scope.row)) }}
           </el-tag>
         </template>
       </el-table-column>
+
       <el-table-column label="操作" width="250" fixed="right">
         <template slot-scope="scope">
-          <el-button type="text" size="small" @click="handleEdit(scope.row)" v-if="scope.row.scheduleStatus !== 1">编辑</el-button>
-          <el-button type="text" size="small" style="color: #67C23A" @click="handlePublish(scope.row)" v-if="scope.row.scheduleStatus === 0">发布</el-button>
-          <el-button type="text" size="small" style="color: #E6A23C" @click="handleUnpublish(scope.row)" v-if="scope.row.scheduleStatus === 1">下架</el-button>
-          <el-button type="text" size="small" style="color: #F56C6C" @click="handleDelete(scope.row)" v-if="scope.row.scheduleStatus !== 1">删除</el-button>
+          <el-button type="text" size="small" @click="handleEdit(scope.row)" v-if="getNormalizedStatus(scope.row) !== 1">编辑</el-button>
+
+          <el-button
+              type="text"
+              size="small"
+              style="color: #67C23A"
+              @click="handlePublish(scope.row)"
+              v-if="getNormalizedStatus(scope.row) === 0 || getNormalizedStatus(scope.row) === 2"
+          >
+            {{ getNormalizedStatus(scope.row) === 0 ? '发布' : '重新上架' }}
+          </el-button>
+
+          <el-button type="text" size="small" style="color: #E6A23C" @click="handleUnpublish(scope.row)" v-if="getNormalizedStatus(scope.row) === 1">下架</el-button>
+
+          <el-button type="text" size="small" style="color: #F56C6C" @click="handleDelete(scope.row)" v-if="getNormalizedStatus(scope.row) !== 1">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-    
+
     <div class="pagination-container">
       <el-pagination
-        background
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        :page-size="pageSize"
-        :current-page="currentPage"
-        :page-sizes="[10, 20, 50, 100]"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          :page-size="pageSize"
+          :current-page="currentPage"
+          :page-sizes="[10, 20, 50, 100]"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
       />
     </div>
-    
+
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="500px">
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="医生" prop="doctorId">
           <el-select v-model="form.doctorId" placeholder="请选择医生" style="width: 100%" @change="handleDoctorChange">
-            <el-option v-for="doctor in doctorList" :key="doctor.id" :label="doctor.doctorName" :value="doctor.id" />
+            <el-option v-for="doctor in doctorList" :key="doctor.id" :label="doctor.doctorName || doctor.doctor_name" :value="doctor.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="出诊日期" prop="workDate">
@@ -177,7 +202,7 @@ export default {
     handleDoctorChange(doctorId) {
       const doctor = this.doctorList.find(d => d.id === doctorId)
       if (doctor) {
-        this.form.deptId = doctor.deptId
+        this.form.deptId = doctor.deptId || doctor.dept_id
       }
     },
     handleSearch() {
@@ -203,7 +228,14 @@ export default {
     },
     handleEdit(row) {
       this.dialogTitle = '编辑排班'
-      this.form = { ...row }
+      this.form = {
+        id: row.id,
+        doctorId: row.doctorId || row.doctor_id,
+        deptId: row.deptId || row.dept_id,
+        workDate: row.workDate || row.work_date,
+        workTime: row.workTime || row.work_time,
+        totalNumber: row.totalNumber || row.total_number
+      }
       this.dialogVisible = true
     },
     handleSubmit() {
@@ -227,17 +259,20 @@ export default {
         }
       })
     },
+
+    // 【修改点】优化了操作提示语，兼容发布和重新上架
     handlePublish(row) {
-      this.$confirm('确定要发布该排班吗？发布后患者可进行预约。', '提示', {
+      this.$confirm('确定要将该排班上架发布吗？患者将可以进行预约。', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async () => {
         await publishSchedule(row.id)
-        this.$message.success('发布成功')
+        this.$message.success('操作成功')
         this.loadData()
       }).catch(() => {})
     },
+
     handleUnpublish(row) {
       this.$confirm('确定要下架该排班吗？下架后患者无法预约。', '提示', {
         confirmButtonText: '确定',
@@ -249,6 +284,7 @@ export default {
         this.loadData()
       }).catch(() => {})
     },
+
     handleDelete(row) {
       this.$confirm('确定要删除该排班吗？', '提示', {
         confirmButtonText: '确定',
@@ -259,6 +295,14 @@ export default {
         this.$message.success('删除成功')
         this.loadData()
       }).catch(() => {})
+    },
+
+    // 万能状态转换器，处理 0/1/2 状态和偶尔出现的 boolean 值
+    getNormalizedStatus(row) {
+      let status = row.scheduleStatus !== undefined ? row.scheduleStatus : row.schedule_status;
+      if (status === true) return 1;
+      if (status === false) return 0;
+      return status;
     },
     getStatusType(status) {
       const types = { 0: 'info', 1: 'success', 2: 'warning' }
@@ -278,27 +322,19 @@ export default {
   background: #fff;
   border-radius: 4px;
 }
-
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  
-  h2 {
-    margin: 0;
-    font-size: 20px;
-    color: #333;
-  }
+  h2 { margin: 0; font-size: 20px; color: #333; }
 }
-
 .search-form {
   margin-bottom: 20px;
   padding: 20px;
   background: #f5f7fa;
   border-radius: 4px;
 }
-
 .pagination-container {
   margin-top: 20px;
   text-align: right;

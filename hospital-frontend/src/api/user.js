@@ -1,6 +1,8 @@
 import request from '@/utils/request'
 
-// 分页查询用户列表
+/**
+ * 分页查询用户列表
+ */
 export function getUserPage(params) {
     return request({
         url: '/sys/user/page',
@@ -9,10 +11,34 @@ export function getUserPage(params) {
     })
 }
 
-// 修改用户状态
-export function updateUserStatus(id, status) {
+/**
+ * 新增用户
+ */
+export function addUser(data) {
     return request({
-        url: `/sys/user/status/${id}/${status}`,
-        method: 'put'
+        url: '/sys/user',
+        method: 'post',
+        data: data
+    })
+}
+
+/**
+ * 修改用户
+ */
+export function updateUser(data) {
+    return request({
+        url: '/sys/user',
+        method: 'put',
+        data: data
+    })
+}
+
+/**
+ * 物理删除用户
+ */
+export function deleteUser(id) {
+    return request({
+        url: `/sys/user/${id}`,
+        method: 'delete'
     })
 }
