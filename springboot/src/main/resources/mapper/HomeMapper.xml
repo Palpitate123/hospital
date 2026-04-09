@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mapper.HomeMapper">
+
+    <!-- 今日挂号总量 -->
+    <select id="getTodayRegister" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM reserve
+        WHERE time = DATE_FORMAT(CURDATE(), '%Y-%m-%d')
+    </select>
+
+    <!-- 今日已叫号 -->
+    <select id="getTodayCalled" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM reserve
+        WHERE time = DATE_FORMAT(CURDATE(), '%Y-%m-%d')
+          AND status = '已叫号'
+    </select>
+
+    <!-- 今日未叫号 -->
+    <select id="getTodayUnCalled" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM reserve
+        WHERE time = DATE_FORMAT(CURDATE(), '%Y-%m-%d')
+          AND status = '未叫号'
+    </select>
+
+    <!-- 医生总数 -->
+    <select id="getDoctorCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM doctor
+    </select>
+
+    <!-- 患者总数 -->
+    <select id="getPatientCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM user
+    </select>
+
+    <!-- 管理员总数 -->
+    <select id="getAdminCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM admin
+    </select>
+
+    <!-- 近7天挂号统计 -->
+    <select id="getWeekRegister" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM reserve WHERE time = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '%Y-%m-%d')
+        UNION ALL
+        SELECT COUNT(*) FROM reserve WHERE time = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '%Y-%m-%d')
+        UNION ALL
+        SELECT COUNT(*) FROM reserve WHERE time = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '%Y-%m-%d')
+        UNION ALL
+        SELECT COUNT(*) FROM reserve WHERE time = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '%Y-%m-%d')
+        UNION ALL
+        SELECT COUNT(*) FROM reserve WHERE time = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '%Y-%m-%d')
+        UNION ALL
+        SELECT COUNT(*) FROM reserve WHERE time = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d')
+        UNION ALL
+        SELECT COUNT(*) FROM reserve WHERE time = DATE_FORMAT(CURDATE(), '%Y-%m-%d')
+    </select>
+
+</mapper>

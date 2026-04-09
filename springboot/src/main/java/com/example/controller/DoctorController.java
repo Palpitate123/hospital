@@ -1,24 +1,19 @@
 package com.example.controller;
-
 import com.example.common.Result;
 import com.example.entity.Doctor;
 import com.example.service.DoctorService;
 import com.github.pagehelper.PageInfo;
 import org.springframework.web.bind.annotation.*;
-
 import javax.annotation.Resource;
 import java.util.List;
-
 /**
  * 医生前端操作接口
  **/
 @RestController
 @RequestMapping("/doctor")
 public class DoctorController {
-
     @Resource
     private DoctorService doctorService;
-
     /**
      * 新增
      */
@@ -27,7 +22,6 @@ public class DoctorController {
         doctorService.add(doctor);
         return Result.success();
     }
-
     /**
      * 删除
      */
@@ -36,7 +30,6 @@ public class DoctorController {
         doctorService.deleteById(id);
         return Result.success();
     }
-
     /**
      * 批量删除
      */
@@ -45,7 +38,6 @@ public class DoctorController {
         doctorService.deleteBatch(ids);
         return Result.success();
     }
-
     /**
      * 修改
      */
@@ -54,7 +46,6 @@ public class DoctorController {
         doctorService.updateById(doctor);
         return Result.success();
     }
-
     /**
      * 根据ID查询
      */
@@ -63,7 +54,6 @@ public class DoctorController {
         Doctor doctor = doctorService.selectById(id);
         return Result.success(doctor);
     }
-
     /**
      * 查询所有
      */
@@ -72,7 +62,6 @@ public class DoctorController {
         List<Doctor> list = doctorService.selectAll(doctor);
         return Result.success(list);
     }
-
     /**
      * 分页查询
      */
@@ -83,12 +72,19 @@ public class DoctorController {
         PageInfo<Doctor> page = doctorService.selectPage(doctor, pageNum, pageSize);
         return Result.success(page);
     }
-
     @GetMapping("/selectPage2")
     public Result selectPage2(Doctor doctor,
-                             @RequestParam(defaultValue = "1") Integer pageNum,
-                             @RequestParam(defaultValue = "10") Integer pageSize) {
+                              @RequestParam(defaultValue = "1") Integer pageNum,
+                              @RequestParam(defaultValue = "10") Integer pageSize) {
         PageInfo<Doctor> page = doctorService.selectPage2(doctor, pageNum, pageSize);
         return Result.success(page);
+    }
+
+    /**
+     * 获取今日医生排班列表（首页公告旁展示用）
+     */
+    @GetMapping("/todaySchedule")
+    public Result getTodaySchedule() {
+        return Result.success(doctorService.getTodaySchedule());
     }
 }

@@ -1,5 +1,4 @@
 package com.example.service;
-
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.example.common.Constants;
@@ -16,7 +15,6 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-
 import javax.annotation.Resource;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -24,13 +22,12 @@ import java.time.format.TextStyle;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-
+import java.util.Map;
 /**
  * 医生业务处理
  **/
 @Service
 public class DoctorService {
-
     @Resource
     private DoctorMapper doctorMapper;
     @Resource
@@ -39,7 +36,6 @@ public class DoctorService {
     private ReserveMapper reserveMapper;
     @Resource
     private PlanMapper planMapper;
-
     /**
      * 新增
      */
@@ -57,14 +53,12 @@ public class DoctorService {
         doctor.setRole(RoleEnum.DOCTOR.name());
         doctorMapper.insert(doctor);
     }
-
     /**
      * 删除
      */
     public void deleteById(Integer id) {
         doctorMapper.deleteById(id);
     }
-
     /**
      * 批量删除
      */
@@ -73,28 +67,24 @@ public class DoctorService {
             doctorMapper.deleteById(id);
         }
     }
-
     /**
      * 修改
      */
     public void updateById(Doctor doctor) {
         doctorMapper.updateById(doctor);
     }
-
     /**
      * 根据ID查询
      */
     public Doctor selectById(Integer id) {
         return doctorMapper.selectById(id);
     }
-
     /**
      * 查询所有
      */
     public List<Doctor> selectAll(Doctor doctor) {
         return doctorMapper.selectAll(doctor);
     }
-
     /**
      * 分页查询
      */
@@ -103,7 +93,6 @@ public class DoctorService {
         List<Doctor> list = doctorMapper.selectAll(doctor);
         return PageInfo.of(list);
     }
-
     /**
      * 医生挂号页面的分页查询
      */
@@ -127,7 +116,6 @@ public class DoctorService {
         }
         return PageInfo.of(list);
     }
-
     /**
      * 获取今天是星期几
      */
@@ -136,7 +124,6 @@ public class DoctorService {
         DayOfWeek dayOfWeek = today.getDayOfWeek();
         return dayOfWeek.getDisplayName(TextStyle.FULL_STANDALONE, Locale.CHINA);
     }
-
     /**
      * 登录
      */
@@ -160,7 +147,6 @@ public class DoctorService {
         }
         return dbDoctor;
     }
-
     /**
      * 修改密码
      */
@@ -176,4 +162,12 @@ public class DoctorService {
         doctorMapper.updateById(dbDoctor);
     }
 
+    /**
+     * 获取今日医生排班列表
+     */
+    public List<Map<String, Object>> getTodaySchedule() {
+        // 复用原有代码的「获取今日星期几」逻辑
+        String todayWeek = getTodayWeek();
+        return doctorMapper.selectTodaySchedule(todayWeek);
+    }
 }

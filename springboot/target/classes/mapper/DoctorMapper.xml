@@ -3,11 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.mapper.DoctorMapper">
-
     <sql id="Base_Column_List">
         id,username,password,name,phone,email,avatar,role,description,price,time,position,department_id
     </sql>
-
     <select id="selectAll" resultType="com.example.entity.Doctor">
         select doctor.*, department.name as departmentName
         from doctor
@@ -27,53 +25,49 @@
         </where>
         group by doctor.id
     </select>
-
     <select id="selectById" resultType="com.example.entity.Doctor">
         select
         <include refid="Base_Column_List" />
         from doctor
         where id = #{id}
     </select>
-
     <delete id="deleteById">
         delete from doctor
         where  id = #{id}
     </delete>
-
     <insert id="insert" parameterType="com.example.entity.Doctor" useGeneratedKeys="true">
         insert into doctor
         <trim prefix="(" suffix=")" suffixOverrides=",">
-                <if test="id != null">id,</if>
-                <if test="username != null">username,</if>
-                <if test="password != null">password,</if>
-                <if test="name != null">name,</if>
-                <if test="phone != null">phone,</if>
-                <if test="email != null">email,</if>
-                <if test="avatar != null">avatar,</if>
-                <if test="role != null">role,</if>
-                <if test="description != null">description,</if>
-                <if test="price != null">price,</if>
-                <if test="time != null">time,</if>
-                <if test="position != null">position,</if>
-                <if test="departmentId != null">department_id,</if>
+            <if test="id != null">id,</if>
+            <if test="username != null">username,</if>
+            <if test="password != null">password,</if>
+            <if test="name != null">name,</if>
+            <if test="phone != null">phone,</if>
+            <if test="email != null">email,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="role != null">role,</if>
+            <if test="description != null">description,</if>
+            <if test="price != null">price,</if>
+            <if test="time != null">time,</if>
+            <if test="position != null">position,</if>
+            <if test="departmentId != null">department_id,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-                <if test="id != null">#{id},</if>
-                <if test="username != null">#{username},</if>
-                <if test="password != null">#{password},</if>
-                <if test="name != null">#{name},</if>
-                <if test="phone != null">#{phone},</if>
-                <if test="email != null">#{email},</if>
-                <if test="avatar != null">#{avatar},</if>
-                <if test="role != null">#{role},</if>
-                <if test="description != null">#{description},</if>
-                <if test="price != null">#{price},</if>
-                <if test="time != null">#{time},</if>
-                <if test="position != null">#{position},</if>
-                <if test="departmentId != null">#{departmentId},</if>
+            <if test="id != null">#{id},</if>
+            <if test="username != null">#{username},</if>
+            <if test="password != null">#{password},</if>
+            <if test="name != null">#{name},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="email != null">#{email},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="role != null">#{role},</if>
+            <if test="description != null">#{description},</if>
+            <if test="price != null">#{price},</if>
+            <if test="time != null">#{time},</if>
+            <if test="position != null">#{position},</if>
+            <if test="departmentId != null">#{departmentId},</if>
         </trim>
     </insert>
-
     <update id="updateById" parameterType="com.example.entity.Doctor">
         update doctor
         <set>
@@ -114,6 +108,20 @@
                 department_id = #{departmentId},
             </if>
         </set>
-        where id = #{id} 
+        where id = #{id}
     </update>
+
+    <!-- 查询今日医生排班列表 -->
+    <select id="selectTodaySchedule" resultType="java.util.Map">
+        SELECT
+            d.name AS department,
+            doc.name,
+            doc.position,
+            doc.price
+        FROM doctor doc
+                 LEFT JOIN department d ON doc.department_id = d.id
+                 LEFT JOIN plan ON plan.doctor_id = doc.id
+        WHERE plan.week = #{week}
+        ORDER BY d.id ASC, doc.id ASC
+    </select>
 </mapper>

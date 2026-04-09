@@ -9,7 +9,7 @@
         <el-form-item prop="password">
           <el-input prefix-icon="el-icon-lock" placeholder="请输入密码" show-password  v-model="form.password"></el-input>
         </el-form-item>
-        <el-form-item>
+        <el-form-item prop="role">
           <el-select v-model="form.role" placeholder="请选择角色" style="width: 100%;">
             <el-option label="管理员" value="ADMIN"></el-option>
             <el-option label="医生" value="DOCTOR"></el-option>
@@ -17,31 +17,23 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button style="width: 100%; background-color: #7eb488; border-color: #7eb488; color: white" @click="login">登 录</el-button>
-        </el-form-item>
-        <div style="display: flex; align-items: center">
-          <div style="flex: 1"></div>
-          <div style="flex: 1; text-align: right">
-            还没有账号？请 <a href="/register">注册</a>
+          <div style="display: flex; gap: 10px;">
+            <el-button 
+              class="btn-gradient"
+              @click="login"
+            >
+              登 录
+            </el-button>
+            <el-button 
+              class="btn-gradient"
+              @click="toRegister"
+            >
+              注 册
+            </el-button>
           </div>
-        </div>
+        </el-form-item>
       </el-form>
     </div>
-    <el-dialog title="郑重声明" :visible.sync="dialogVisible" :show-close="false" width="40%" :close-on-click-modal="false" destroy-on-close>
-      <div style="font-size: 16px; line-height: 26px; margin-bottom: 20px; text-align: justify">
-        本平台已经对本项目申请了<b style="color: #000">软件著作权</b>，完善了所有该项目资源相关的法律文件材料。
-        <b style="color: #ff2424">本平台付费用户可以学习该项目自己使用，禁止在其他平台做转手或者倒卖，禁止在私域未经授权分享源码，禁止上传代码到github、gitee、gitlab等代码托管平台。</b>
-        我们公司的法务会在各大平台（例如：闲鱼、小红书、B站、CSDN等社交媒体平台）不定期检索， 一旦发现倒卖或转手的现象，我们会第一时间收集好证据，向你发送律师函。
-        <b style="color: #000">现在互联网所有账号都是实名制，我们可以明确追溯到你。请大家不要做违法的事情，不要因为一时糊涂给自己的人生轨迹抹上一层黑。</b>
-      </div>
-      <div style="margin-top: 10px; font-size: 16px; color: #000">
-        本项目唯一官方平台：<b>项目实战网（<a href="https://www.javaxmsz.cn" target="_blank">https://www.javaxmsz.cn</a>）</b>
-      </div>
-      <div style="margin-top: 5px; font-size: 16px"></div>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialogVisible=false">我已明确法律规则，承诺本项目仅限个人使用</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -62,18 +54,15 @@ export default {
       }
     }
   },
-  created() {
-
-  },
+  created() {},
   methods: {
     login() {
       this.$refs['formRef'].validate((valid) => {
         if (valid) {
-          // 验证通过
           this.$request.post('/login', this.form).then(res => {
             if (res.code === '200') {
-              localStorage.setItem("xm-user", JSON.stringify(res.data))  // 存储用户数据
-              this.$router.push('/')  // 跳转主页
+              localStorage.setItem("xm-user", JSON.stringify(res.data))
+              this.$router.push('/')
               this.$message.success('登录成功')
             } else {
               this.$message.error(res.msg)
@@ -81,6 +70,9 @@ export default {
           })
         }
       })
+    },
+    toRegister() {
+      this.$router.push('/register')
     }
   }
 }
@@ -90,14 +82,37 @@ export default {
 .container {
   height: 100vh;
   overflow: hidden;
-  background-image: url("@/assets/imgs/bg.jpg");
+  /* 移除背景图，替换为淡绿色纯色背景，和按钮色调统一 */
+  background-color: #f0f7f2;
   background-size: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #666;
 }
+
+:deep(.btn-gradient) {
+  flex: 1;
+  background: linear-gradient(to right, #7eb488, #5a9966);
+  border: none !important;
+  color: white !important;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+:deep(.btn-gradient:hover), 
+:deep(.btn-gradient:focus) {
+  background: linear-gradient(to right, #6ea97a, #4e8859);
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(126, 180, 136, 0.3);
+}
+:deep(.btn-gradient:active) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
 a {
   color: #2a60c9;
+  text-decoration: none;
 }
 </style>
